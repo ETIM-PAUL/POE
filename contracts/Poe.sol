@@ -1,34 +1,37 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-// Uncomment this line to use console.log
-// import "hardhat/console.sol";
-
 contract ProofOfExistence {
     // variable for storing hashValue
-    string public hashValue;
-    string public hash;
-    uint8 public initializer;
-    string[] public hashedValues;
+    bytes32 public hash;
 
-    uint hashDigits = 8;
+    struct HashedValues {
+        bytes32 value;
+        address caller;
+    }
 
-    // Equivalent to 10^8 = 8
-    uint hashModulus = 10 ** hashDigits;
+    //   array that stores all hashed values
+    HashedValues[] public hashedValues;
 
-    function calculate(string memory _value) public view returns (uint) {
-        hash = uint(keccak256(abi.encodePacked(_value))) % hashModulus;
-        hashedValues.push(hash);
+    mapping(bytes32 => bool) isHashed;
+
+    // function that hash value
+    function _hashedValue(string memory _value) public returns (bytes32) {
+        hash = keccak256(abi.encodePacked(_value));
+        hashedValues.push(HashedValues({value: hash, caller: msg.sender}));
+        isHashed[hash] = true;
         return hash;
     }
 
+    // function that checks if value exist
     function checkHashed(
-        string memory _hashedValue
-    ) public view returns (bool) {
-        if (hashedValues.includes(_hashedValue)) {
-            return true;
-        } else {
-            return false;
-        }
+        bytes32 _hashedValue
+    ) public view returns (bool wasHashed) {
+        wasHashed = isHashed[_hashedValue];
+    }
+
+    // function that returns all hashed values
+    function returnAllHashed() public view returns (HashedValues[] memory) {
+        return hashedValues;
     }
 }
